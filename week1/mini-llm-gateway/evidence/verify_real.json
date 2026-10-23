@@ -1,0 +1,286 @@
+{
+  "mode": "real",
+  "started_at": "2026-10-23T12:21:58.060430+00:00",
+  "finished_at": "2026-10-23T12:22:19.756912+00:00",
+  "passed": 11,
+  "failed": 0,
+  "results": [
+    {
+      "check": "model_routing_endpoint",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "models": [
+          {
+            "id": "deepseek-v4-pro",
+            "object": "model",
+            "owned_by": "deepseek",
+            "protocol": "openai_responses",
+            "upstream_model": "deepseek-v4-pro",
+            "rate_limit": {
+              "requests_per_minute": 600,
+              "burst": 100
+            }
+          },
+          {
+            "id": "deepseek-flash",
+            "object": "model",
+            "owned_by": "deepseek",
+            "protocol": "anthropic_messages",
+            "upstream_model": "deepseek-flash",
+            "rate_limit": {
+              "requests_per_minute": 600,
+              "burst": 100
+            }
+          }
+        ]
+      }
+    },
+    {
+      "check": "non_stream::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "pong",
+        "protocol": "openai_responses",
+        "upstream_model": "deepseek-v4-pro",
+        "usage": {
+          "prompt_tokens": 91,
+          "completion_tokens": 15,
+          "total_tokens": 106,
+          "cached_tokens": 0,
+          "reasoning_tokens": 12
+        },
+        "timing": {
+          "latency_ms": 1512.44,
+          "ttft_ms": null
+        },
+        "request_id": "req_ba27f4aaa10845529a65784095dfdeba"
+      }
+    },
+    {
+      "check": "non_stream::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "pong",
+        "protocol": "anthropic_messages",
+        "upstream_model": "deepseek-flash",
+        "usage": {
+          "prompt_tokens": 38,
+          "completion_tokens": 13,
+          "total_tokens": 51,
+          "cached_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "timing": {
+          "latency_ms": 1060.47,
+          "ttft_ms": null
+        },
+        "request_id": "req_c3bb53deb6bd4345a8dbd479f0e91b15"
+      }
+    },
+    {
+      "check": "streaming_sse::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chunks": 9,
+        "text": "1 2 3 4 5",
+        "ttft_ms": 1523.67,
+        "done": true,
+        "usage": {
+          "prompt_tokens": 94,
+          "completion_tokens": 57,
+          "total_tokens": 151,
+          "cached_tokens": 0,
+          "reasoning_tokens": 47
+        },
+        "timing": {
+          "latency_ms": 1291.52,
+          "ttft_ms": 1255.34
+        },
+        "request_id": "req_51d4bd22d68a4e7ebbfa415a6c8aaa7a"
+      }
+    },
+    {
+      "check": "streaming_sse::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chunks": 13,
+        "text": "1, 2, 3, 4, 5",
+        "ttft_ms": 1051.99,
+        "done": true,
+        "usage": {
+          "prompt_tokens": 41,
+          "completion_tokens": 48,
+          "total_tokens": 89,
+          "cached_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "timing": {
+          "latency_ms": 827.66,
+          "ttft_ms": 792.99
+        },
+        "request_id": "req_9a005cd736db416c96fd955624fb0852"
+      }
+    },
+    {
+      "check": "structured_output::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "{\"answer\":\"42\",\"confidence\":99}",
+        "parsed": {
+          "answer": "42",
+          "confidence": 99
+        },
+        "structured_output": {
+          "answer": "42",
+          "confidence": 99
+        },
+        "error": null
+      }
+    },
+    {
+      "check": "structured_output::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "{\"answer\": \"42\", \"confidence\": 99}",
+        "parsed": {
+          "answer": "42",
+          "confidence": 99
+        },
+        "structured_output": {
+          "answer": "42",
+          "confidence": 99
+        },
+        "error": null
+      }
+    },
+    {
+      "check": "prompt_versions_and_reference",
+      "ok": true,
+      "detail": {
+        "v1_version": 1,
+        "v2_version": 2,
+        "render_v1": "You are a strict analyst. Answer in English.",
+        "render_active": "You are a friendly analyst. This is version two.",
+        "chat_prompt_meta": {
+          "id": "verify-analyst",
+          "version": 1
+        },
+        "usage_prompt": {
+          "id": "verify-analyst",
+          "version": 1
+        }
+      }
+    },
+    {
+      "check": "observability",
+      "ok": true,
+      "detail": {
+        "records": 7,
+        "stream_records": 2,
+        "records_with_ttft": 2,
+        "sample": {
+          "request_id": "req_d43067e89a884ee9aabcaee49b21e0aa",
+          "created_at": "2026-10-23T12:22:12.181464+00:00",
+          "model": "deepseek-v4-pro",
+          "protocol": "openai_responses",
+          "upstream_model": "deepseek-v4-pro",
+          "stream": false,
+          "prompt_id": "verify-analyst",
+          "prompt_version": 1,
+          "prompt_tokens": 96,
+          "completion_tokens": 28,
+          "cached_tokens": 0,
+          "reasoning_tokens": 26,
+          "latency_ms": 1276.61,
+          "ttft_ms": null,
+          "retries": 0,
+          "status": "success",
+          "status_code": 200,
+          "error_code": null,
+          "error_message": null,
+          "total_tokens": 124
+        },
+        "totals": {
+          "requests": 7,
+          "prompt_tokens": 815,
+          "completion_tokens": 248,
+          "total_tokens": 1063,
+          "cached_tokens": 128,
+          "reasoning_tokens": 114
+        },
+        "model_metrics": [
+          {
+            "model": "deepseek-flash",
+            "protocol": "anthropic_messages",
+            "requests": 3,
+            "successes": 3,
+            "errors": 0,
+            "prompt_tokens": 381,
+            "completion_tokens": 109,
+            "total_tokens": 490,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0,
+            "avg_latency_ms": 886.29,
+            "avg_ttft_ms": 792.99,
+            "max_latency_ms": 1060.48
+          },
+          {
+            "model": "deepseek-v4-pro",
+            "protocol": "openai_responses",
+            "requests": 4,
+            "successes": 4,
+            "errors": 0,
+            "prompt_tokens": 434,
+            "completion_tokens": 139,
+            "total_tokens": 573,
+            "cached_tokens": 128,
+            "reasoning_tokens": 114,
+            "avg_latency_ms": 1338.37,
+            "avg_ttft_ms": 1255.34,
+            "max_latency_ms": 1512.45
+          }
+        ]
+      }
+    },
+    {
+      "check": "error_envelope",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "error": {
+          "error": {
+            "message": "Unknown model 'unknown-model'; available models: ['deepseek-flash', 'deepseek-v4-pro']",
+            "type": "invalid_request_error",
+            "code": "model_not_found",
+            "param": "model",
+            "request_id": "req_439ca3c91ee143cdbec0763dc57425d9"
+          }
+        }
+      }
+    },
+    {
+      "check": "rate_limit_per_model",
+      "ok": true,
+      "detail": {
+        "pro_first": 200,
+        "pro_second": 429,
+        "retry_after": "58",
+        "error": {
+          "message": "Rate limit exceeded for model 'deepseek-v4-pro'; retry in 58s",
+          "type": "rate_limit_error",
+          "code": "rate_limit_exceeded",
+          "param": null,
+          "request_id": "req_aa6cc532f36a4ef6a7407c4e0483a8f2"
+        },
+        "flash_after_pro_limited": 200
+      }
+    }
+  ]
+}

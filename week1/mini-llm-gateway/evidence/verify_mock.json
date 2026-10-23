@@ -1,0 +1,298 @@
+{
+  "mode": "mock",
+  "started_at": "2026-10-23T12:21:34.777102+00:00",
+  "finished_at": "2026-10-23T12:21:51.835006+00:00",
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    {
+      "check": "model_routing_endpoint",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "models": [
+          {
+            "id": "deepseek-v4-pro",
+            "object": "model",
+            "owned_by": "deepseek",
+            "protocol": "openai_responses",
+            "upstream_model": "deepseek-v4-pro",
+            "rate_limit": {
+              "requests_per_minute": 600,
+              "burst": 100
+            }
+          },
+          {
+            "id": "deepseek-flash",
+            "object": "model",
+            "owned_by": "deepseek",
+            "protocol": "anthropic_messages",
+            "upstream_model": "deepseek-flash",
+            "rate_limit": {
+              "requests_per_minute": 600,
+              "burst": 100
+            }
+          }
+        ]
+      }
+    },
+    {
+      "check": "non_stream::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "[deepseek-v4-pro] mock echo: Reply with the single word: pong",
+        "protocol": "openai_responses",
+        "upstream_model": "deepseek-v4-pro",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 20,
+          "total_tokens": 120,
+          "cached_tokens": 7,
+          "reasoning_tokens": 5
+        },
+        "timing": {
+          "latency_ms": 278.98,
+          "ttft_ms": null
+        },
+        "request_id": "req_a8161402584b426f9486befbe8261b43"
+      }
+    },
+    {
+      "check": "non_stream::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "[deepseek-flash] mock echo: Reply with the single word: pong",
+        "protocol": "anthropic_messages",
+        "upstream_model": "deepseek-flash",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 20,
+          "total_tokens": 120,
+          "cached_tokens": 7,
+          "reasoning_tokens": 0
+        },
+        "timing": {
+          "latency_ms": 255.71,
+          "ttft_ms": null
+        },
+        "request_id": "req_6f3a6910d81d4aed8222e0949e719f39"
+      }
+    },
+    {
+      "check": "streaming_sse::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chunks": 59,
+        "text": "[deepseek-v4-pro] mock echo: Count from 1 to 5 in one line.",
+        "ttft_ms": 566.57,
+        "done": true,
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 20,
+          "total_tokens": 120,
+          "cached_tokens": 7,
+          "reasoning_tokens": 5
+        },
+        "timing": {
+          "latency_ms": 524.76,
+          "ttft_ms": 300.53
+        },
+        "request_id": "req_cb274b4b39354178bd70e8f08225ffda"
+      }
+    },
+    {
+      "check": "streaming_sse::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chunks": 58,
+        "text": "[deepseek-flash] mock echo: Count from 1 to 5 in one line.",
+        "ttft_ms": 538.47,
+        "done": true,
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 20,
+          "total_tokens": 120,
+          "cached_tokens": 7,
+          "reasoning_tokens": 0
+        },
+        "timing": {
+          "latency_ms": 498.07,
+          "ttft_ms": 277.75
+        },
+        "request_id": "req_f92adbe6b98c4d279cc57a8ba8de2264"
+      }
+    },
+    {
+      "check": "structured_output::deepseek-v4-pro",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "{\"answer\": \"mock-answer\", \"confidence\": 42}",
+        "parsed": {
+          "answer": "mock-answer",
+          "confidence": 42
+        },
+        "structured_output": {
+          "answer": "mock-answer",
+          "confidence": 42
+        },
+        "error": null
+      }
+    },
+    {
+      "check": "structured_output::deepseek-flash",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "{\"answer\": \"mock-answer\", \"confidence\": 42}",
+        "parsed": {
+          "answer": "mock-answer",
+          "confidence": 42
+        },
+        "structured_output": {
+          "answer": "mock-answer",
+          "confidence": 42
+        },
+        "error": null
+      }
+    },
+    {
+      "check": "prompt_versions_and_reference",
+      "ok": true,
+      "detail": {
+        "v1_version": 1,
+        "v2_version": 2,
+        "render_v1": "You are a strict analyst. Answer in English.",
+        "render_active": "You are a friendly analyst. This is version two.",
+        "chat_prompt_meta": {
+          "id": "verify-analyst",
+          "version": 1
+        },
+        "usage_prompt": {
+          "id": "verify-analyst",
+          "version": 1
+        }
+      }
+    },
+    {
+      "check": "observability",
+      "ok": true,
+      "detail": {
+        "records": 7,
+        "stream_records": 2,
+        "records_with_ttft": 2,
+        "sample": {
+          "request_id": "req_f06f336f6a8b4238b7f0d0565dcbce61",
+          "created_at": "2026-10-23T12:21:44.385816+00:00",
+          "model": "deepseek-v4-pro",
+          "protocol": "openai_responses",
+          "upstream_model": "deepseek-v4-pro",
+          "stream": false,
+          "prompt_id": "verify-analyst",
+          "prompt_version": 1,
+          "prompt_tokens": 100,
+          "completion_tokens": 20,
+          "cached_tokens": 7,
+          "reasoning_tokens": 5,
+          "latency_ms": 262.36,
+          "ttft_ms": null,
+          "retries": 0,
+          "status": "success",
+          "status_code": 200,
+          "error_code": null,
+          "error_message": null,
+          "total_tokens": 120
+        },
+        "totals": {
+          "requests": 7,
+          "prompt_tokens": 700,
+          "completion_tokens": 140,
+          "total_tokens": 840,
+          "cached_tokens": 49,
+          "reasoning_tokens": 20
+        },
+        "model_metrics": [
+          {
+            "model": "deepseek-flash",
+            "protocol": "anthropic_messages",
+            "requests": 3,
+            "successes": 3,
+            "errors": 0,
+            "prompt_tokens": 300,
+            "completion_tokens": 60,
+            "total_tokens": 360,
+            "cached_tokens": 21,
+            "reasoning_tokens": 0,
+            "avg_latency_ms": 340.41,
+            "avg_ttft_ms": 277.75,
+            "max_latency_ms": 498.22
+          },
+          {
+            "model": "deepseek-v4-pro",
+            "protocol": "openai_responses",
+            "requests": 4,
+            "successes": 4,
+            "errors": 0,
+            "prompt_tokens": 400,
+            "completion_tokens": 80,
+            "total_tokens": 480,
+            "cached_tokens": 28,
+            "reasoning_tokens": 20,
+            "avg_latency_ms": 332.99,
+            "avg_ttft_ms": 300.53,
+            "max_latency_ms": 524.9
+          }
+        ]
+      }
+    },
+    {
+      "check": "error_envelope",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "error": {
+          "error": {
+            "message": "Unknown model 'unknown-model'; available models: ['deepseek-flash', 'deepseek-v4-pro']",
+            "type": "invalid_request_error",
+            "code": "model_not_found",
+            "param": "model",
+            "request_id": "req_d4e8a94676cf45509cf230ca24753e49"
+          }
+        }
+      }
+    },
+    {
+      "check": "retry_exponential_backoff",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "content": "[deepseek-v4-pro] mock echo: __FAIL_TWICE__ then say ok.",
+        "usage_retries": 2,
+        "upstream_attempts": 3,
+        "expected_attempts": 3,
+        "error": null
+      }
+    },
+    {
+      "check": "rate_limit_per_model",
+      "ok": true,
+      "detail": {
+        "pro_first": 200,
+        "pro_second": 429,
+        "retry_after": "60",
+        "error": {
+          "message": "Rate limit exceeded for model 'deepseek-v4-pro'; retry in 60s",
+          "type": "rate_limit_error",
+          "code": "rate_limit_exceeded",
+          "param": null,
+          "request_id": "req_a5f00593bea047838fc7383e6c9968af"
+        },
+        "flash_after_pro_limited": 200
+      }
+    }
+  ]
+}

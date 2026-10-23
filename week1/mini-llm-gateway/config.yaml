@@ -1,0 +1,44 @@
+service_name: mini-llm-gateway
+
+# 网关数据库：提示词版本 + 调用用量账本
+database_path: ${GATEWAY_DB_PATH:-data/gateway.db}
+
+# 网关自身鉴权；留空表示不校验调用方
+api_keys:
+  - ${GATEWAY_API_KEY:-}
+
+retry:
+  max_attempts: 3          # 含首次请求，最多 3 次
+  base_delay_seconds: 0.5
+  max_delay_seconds: 8
+  retry_statuses: [408, 409, 429, 500, 502, 503, 504]
+
+structured_repair_attempts: 1   # 结构化输出不合规时，再给模型一次修复机会
+
+models:
+  # 训练目标一：OpenAI Responses API
+  deepseek-v4-pro:
+    protocol: openai_responses
+    base_url: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+    path: /v1/responses
+    upstream_model: deepseek-v4-pro
+    api_key_env: DEEPSEEK_API_KEY
+    timeout_seconds: 120
+    default_max_tokens: 2048
+    rate_limit:
+      requests_per_minute: 20
+      burst: 3
+
+  # 训练目标二：Anthropic Messages API
+  deepseek-flash:
+    protocol: anthropic_messages
+    base_url: ${DEEPSEEK_ANTHROPIC_BASE_URL:-https://api.deepseek.com/anthropic}
+    path: /v1/messages
+    upstream_model: deepseek-flash
+    api_key_env: DEEPSEEK_API_KEY
+    anthropic_version: "2023-06-01"
+    timeout_seconds: 120
+    default_max_tokens: 2048
+    rate_limit:
+      requests_per_minute: 60
+      burst: 10
