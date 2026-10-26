@@ -117,3 +117,170 @@ npm run test:mcp:live   # 缺 LUCKIN_MCP_TOKEN 时必须失败
 - 只有幂等且可重试的调用才自动重试；流式输出已经发出后不切换模型。
 - pi Hook 修改后的参数不会由 pi 自动重验，因此 handler 前统一由 `ToolRuntime` 再验证。
 - 审计写入失败不能改变已经完成的业务副作用；生产环境应将审计发送到独立可靠队列。
+
+## 7. 调用链路
+
+### 7.1 组件与依赖
+
+```mermaid
+flowchart LR
+  subgraph Entries[入口进程]
+    CLI[runtime/src/cli.ts<br/>tools / agent / approvals / audit / trace / invoke]
+    EXT[runtime/src/pi/coding-agent-extension.ts<br/>pi-coding-agent 扩展]
+    API[runtime/src/approval-server.ts<br/>HTTP :8787]
+  end
+
+  subgraph Build[Platform 组装 platform.ts]
+    CFG[config.ts<br/>loadConfig]
+    STORE[store.ts<br/>PlatformStore · SQLite]
+    POLICY[policy.ts<br/>PolicyEngine]
+    REG[registry.ts<br/>ToolRegistry]
+    MCP[mcp/adapter.ts<br/>McpAdapterPlugin]
+    RT[runtime.ts<br/>ToolRuntime]
+  end
+
+  subgraph Tools[内置工具]
+    ORDER[tools/order.ts<br/>order.get_status]
+    TICKET[tools/ticket.ts<br/>ticket.create]
+  end
+
+  subgraph GatewayProc[gateway 进程 Python/FastAPI :8000]
+    GWMAIN[app/main.py<br/>/v1/chat/completions<br/>/v1/prompts/:name/render<br/>/internal/tools/order.get_status]
+    GWSVC[app/service.py<br/>LiteLLMGateway]
+    GWPROMPT[app/prompts.py<br/>PromptRegistry]
+    GWREPO[app/repository.py<br/>GatewayRepository]
+  end
+
+  EXT_MCP[(my-coffee MCP<br/>Streamable HTTP)]
+  EXT_DS[(DeepSeek API)]
+
+  CLI -->|buildPlatform| Build
+  EXT -->|buildPlatform| Build
+  API -->|buildPlatform| Build
+  CFG --> STORE
+  CFG --> POLICY
+  CFG --> REG
+  CFG --> MCP
+  REG -->|register| ORDER
+  REG -->|register| TICKET
+  MCP -->|register mcp.my-coffee.*| REG
+  MCP --- EXT_MCP
+  RT --> REG
+  RT --> POLICY
+  RT --> STORE
+  ORDER -->|HTTP /internal/tools/order.get_status| GWMAIN
+  EXT & CLI -->|HTTPS /v1/chat/completions<br/>/v1/prompts/render| GWMAIN
+  GWMAIN --> GWSVC
+  GWMAIN --> GWPROMPT
+  GWSVC --> GWREPO
+  GWSVC --- EXT_DS
+```
+
+### 7.2 Agent Loop 主链路（`npm run cli -- agent`）
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as 用户
+  participant CLI as cli.ts agent
+  participant AR as pi/agent-runner.ts<br/>runManagedAgent
+  participant PC as pi/prompt-client.ts
+  participant GW as Gateway :8000
+  participant DS as DeepSeek
+  participant PI as pi runAgentLoop
+  participant LG as LoopGuard
+  participant TR as ToolRuntime
+  participant RG as ToolRegistry
+  participant PE as PolicyEngine
+  participant ST as PlatformStore
+  participant TL as Tool Handler
+  participant MCP as my-coffee MCP
+
+  U->>CLI: agent "查询订单 ORD-A-1001"
+  CLI->>AR: runManagedAgent(platform, input)
+  AR->>PC: renderSystemPrompt(config, ctx)
+  PC->>GW: POST /v1/prompts/agent.default/render
+  GW-->>PC: { prompt, version, content_hash }
+  AR->>AR: createGatewayModels → provider 指向 gateway
+  AR->>RG: snapshot(ctx, policy) 过滤可见工具
+  AR->>PI: runAgentLoop(messages, tools, hooks)
+
+  loop 每轮对话（受 LoopGuard 预算约束）
+    PI->>GW: POST /v1/chat/completions (stream)
+    GW->>DS: litellm.acompletion
+    DS-->>GW: chunks
+    GW-->>PI: SSE 流
+    PI-->>U: text_delta → onText
+  end
+
+  PI->>LG: beforeToolCall（轮次/工具数/重复/时限）
+  LG-->>PI: allow / deny
+  PI->>TR: beforePiCall → prepare
+  TR->>RG: getByModelName
+  TR->>TR: validateToolArguments (pi-ai)
+  TR->>PE: evaluate（白名单/RBAC/plan/租户前缀/审批）
+  alt deny
+    TR->>ST: addAudit + addTrace tool.denied
+    TR-->>PI: block
+  else confirm
+    TR->>ST: createApproval + tool.approval_requested
+    TR-->>PI: block + approval_id
+  else allow
+    TR-->>PI: prepared 缓存
+  end
+
+  PI->>TR: AgentTool.execute → executePreparedById
+  TR->>TL: runWithDeadline(handler, 超时, 重试)
+  alt order.get_status
+    TL->>GW: /internal/tools/order.get_status
+  else ticket.create
+    TL->>ST: createTicket（幂等键）
+  else mcp.my-coffee.*
+    TL->>MCP: client.callTool
+  end
+  TL-->>TR: output / ToolRuntimeError
+  opt 可重试错误且有 fallbackHandler
+    TR->>TL: fallbackHandler（不重试）
+  end
+  TR->>ST: addAudit + addTrace tool.completed / failed
+  TR-->>PI: tool result
+
+  PI->>LG: shouldStopAfterTurn（pendingApproval? / 预算?）
+  LG-->>PI: stop / continue
+  PI-->>AR: messages
+  AR-->>CLI: { trace_id, final_answer, stop, budget, pending_approval_id }
+```
+
+### 7.3 审批执行链路（`approvals decide` → `execute` / Approval API）
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Op as 审批人
+  participant CLI as cli.ts approvals
+  participant API as approval-server.ts :8787
+  participant ST as PlatformStore
+  participant TR as ToolRuntime
+  participant RG as ToolRegistry
+  participant PE as PolicyEngine
+  participant TL as Tool Handler
+
+  Op->>API: POST /approvals/:id/decision
+  API->>ST: decideApproval(approve/reject, actor)
+  Note over ST: 仅当 status=pending 且未过期
+  Op->>API: POST /approvals/:id/execute
+  API->>TR: executeApproval(id)
+  TR->>ST: getApproval → 必须 status=approved
+  TR->>TR: approvalDigest 校验 (trace_id, tool_call_id,<br/>tool_name, user, tenant, args)
+  Note over TR: 参数变化 → APPROVAL_BINDING_MISMATCH
+  TR->>ST: claimApproval (CAS: approved → executing)
+  TR->>RG: getByModelName + validateToolArguments
+  TR->>PE: evaluate(approvalSatisfied=true)
+  TR->>TL: executePrepared → runWithDeadline(handler)
+  TL-->>TR: result / ToolRuntimeError
+  TR->>ST: finishApproval(consumed / failed)<br/>+ addAudit + addTrace
+  TR-->>API: InvocationResult
+```
+
+CLI 的 `approvals decide` / `approvals execute` 与 Approval API 走完全相同的 `PlatformStore` + `ToolRuntime.executeApproval` 路径，只是入口不同；`invoke` 子命令绕过模型但仍走 `ToolRuntime.invoke`，用于确定性验收。
+
